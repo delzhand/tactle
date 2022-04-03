@@ -128,6 +128,9 @@ function drawPiece(piece) {
 }
 
 function rewind() {
+  if ($('.rewind').hasClass('hidden')) {
+    return;
+  }
   const mode = getMode();
   const $activePiece = getActivePiece();
   if (mode === 'moving') {
@@ -198,8 +201,6 @@ function touchPiece($e) {
       $('.score').html(`<span class="a-changeValue">${state.score}</span>`);
       $activePiece.attr('data-state', 'waiting');
       endTurn();
-      // $('[data-attack="true"]').attr('data-attack', "false");
-      // $('.active').addClass('hidden');
     }
   }
 }
@@ -208,14 +209,15 @@ function endTurn() {
   $('[data-attack="true"]').attr('data-attack', "false");
   $('[data-state="attacking"]').attr('data-state', 'waiting');
   $('.active').addClass('hidden');
+  $('.rewind').addClass('hidden');
   $remainingFoes = $('.unit.light');
   if ($remainingFoes.length === 0) {
+    $('[data-state="ready"]').attr('data-state', 'waiting');
     console.log("Victory!");
     persist.incompletes--;
     persist.wins++;
     persist.distribution[state.round]++;
     window.localStorage.setItem('tactle', JSON.stringify(persist));
-    $('.rewind').addClass('hidden');
     showPanel('victory');
     return;
   }
