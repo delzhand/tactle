@@ -2,7 +2,7 @@ const dayms = 1000 * 60 * 60 * 24;
 const start = new Date('2022/04/01').setHours(0, 0, 0, 0);
 const today = new Date().setHours(0, 0, 0, 0);
 const puzzleId = Math.ceil((today - start)/(dayms));
-let seedRand = new Math.seedrandom("t");
+let seedRand = new Math.seedrandom(puzzleId);
 
 let state = {};
 let persist = null;
