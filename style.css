@@ -182,6 +182,20 @@ body {
   margin-bottom: 1em;
 }
 
+.menu > * {
+  -ms-flex-preferred-size: 0;
+      flex-basis: 0;
+  min-width: 100px;
+}
+
+.menu > *:nth-child(2) {
+  text-align: center;
+}
+
+.menu > *:nth-child(3) {
+  text-align: right;
+}
+
 h1 {
   font-size: 3em;
   margin: 0 0 -.25em 0;
@@ -217,19 +231,19 @@ h1 {
   display: -webkit-inline-box;
   display: -ms-inline-flexbox;
   display: inline-flex;
-  background-color: #202020;
-}
-
-.tile.dk {
   background-color: #303030;
 }
 
+.tile.dk {
+  background-color: #202020;
+}
+
 .tile[data-move="true"] {
-  background: #2c2048;
+  background: #3f2a70;
 }
 
 .tile[data-attack="true"] {
-  background: #842046;
+  background: #a3184d;
 }
 
 .tile[data-block="true"] {
@@ -238,28 +252,32 @@ h1 {
 }
 
 .unit {
+  -webkit-transition-duration: .35s;
+          transition-duration: .35s;
   height: 4em;
   width: 4em;
   border: 2px solid transparent;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0px;
+  margin-top: 0px;
+  left: 0px;
+  margin-left: 0px;
   text-align: center;
 }
 
-.unit.light {
+.unit[data-color="light"] {
   color: #FFF;
 }
 
-.unit.light .piece {
+.unit[data-color="light"] .piece {
   -webkit-text-stroke: 2px #666;
 }
 
-.unit.dark {
+.unit[data-color="dark"] {
   color: #000;
 }
 
-.unit.dark .piece {
+.unit[data-color="dark"] .piece {
   -webkit-text-stroke: 2px #FFF;
 }
 
@@ -373,19 +391,23 @@ h1 {
 }
 
 [data-x="2"] {
-  left: calc(20% + 1px);
+  margin-left: 1px;
+  left: 20%;
 }
 
 [data-x="3"] {
-  left: calc(40% + 2px);
+  margin-left: 2px;
+  left: 40%;
 }
 
 [data-x="4"] {
-  left: calc(60% + 3px);
+  margin-left: 3px;
+  left: 60%;
 }
 
 [data-x="5"] {
-  left: calc(80% + 4px);
+  margin-left: 4px;
+  left: 80%;
 }
 
 [data-y="1"] {
@@ -393,23 +415,33 @@ h1 {
 }
 
 [data-y="2"] {
-  top: calc(16.6% + 1px);
+  margin-top: 1px;
+  top: 14.3%;
 }
 
 [data-y="3"] {
-  top: calc(33.3% + 2px);
+  margin-top: 2px;
+  top: 28.6%;
 }
 
 [data-y="4"] {
-  top: calc(50% + 3px);
+  margin-top: 3px;
+  top: 42.9%;
 }
 
 [data-y="5"] {
-  top: calc(66.6% + 4px);
+  margin-top: 4px;
+  top: 57.1%;
 }
 
 [data-y="6"] {
-  top: calc(83.3% + 5px);
+  margin-top: 5px;
+  top: 71.4%;
+}
+
+[data-y="7"] {
+  margin-top: 6px;
+  top: 85.7%;
 }
 
 .triangle {
@@ -471,12 +503,6 @@ h1 {
   width: 362px;
   position: relative;
   margin-top: 1em;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: justify;
-      -ms-flex-pack: justify;
-          justify-content: space-between;
 }
 
 .hidden {
@@ -484,6 +510,7 @@ h1 {
 }
 
 .rewind {
+  text-align: center;
   font-size: 2em;
 }
 

@@ -18,7 +18,7 @@
   <div class="menu">
     <div onClick="showPanel('how')">How to Play</div>
     <h1>Tactle</h1>
-    <div onClick="showPanel('stats')">Stats</div>
+    <div onClick="showPanel('stats')"><s>Stats</s></div>
   </div>
   <div class="grid">
     <div class="row" data-row="1">
@@ -63,6 +63,13 @@
       <div class="tile dk" data-col="4"></div>
       <div class="tile" data-col="5"></div>
     </div>
+    <div class="row" data-row="7">
+      <div class="tile dk" data-col="1"></div>
+      <div class="tile" data-col="2"></div>
+      <div class="tile dk" data-col="3"></div>
+      <div class="tile" data-col="4"></div>
+      <div class="tile dk" data-col="5"></div>
+    </div>
 
     <div class="active hidden" data-x="1" data-y="6">
       <svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 40 40' preserveAspectRatio='none'>
@@ -93,9 +100,7 @@
   </div>
   
   <div class="controls">
-    <div>Score: <b class="score">0</b> <span class="score-crown"></span></div>
     <div class="rewind hidden" onClick="rewind()"><span class="icon-rewind"></span></div>
-    <div>Round <b><span class="round">1</span>/6</b></div>
   </div>
     
   <div class="overlay hidden">
@@ -103,16 +108,16 @@
       <div class="close" onClick="hidePanel()">X</div>
       <div class="display victory hidden">
         <h2>Victory!</h2>
-        <p>Score: <b class="score">0</b> <span class="score-crown"></span></p>
+        <p>Score: <b class="score">0</b></p>
         <p>Next Board in <span class="countdown"></span></p>
       </div>
       <div class="display failed hidden">
         <h2>Failed...</h2>
-        <p>Score: <b class="score">0</b> <span class="score-crown"></span></p>
+        <p>Score: <b class="score">0</b></p>
       </div>
       <div class="display how hidden">
         <h2>How to Play</h2>
-        <p>Clear the field of opponents in six rounds!</p>
+        <p>Clear the field of opponents!</p>
         <p>You play as the side at the bottom of the board. Each piece moves once per round.</p>
         <p>Each piece can move in a specific pattern, but not through other pieces of over gaps (except Knights).</p>
         <p>After moving (or remaining in place), a piece can attack any adjacent opponent.</p>
@@ -124,6 +129,7 @@
         <p>When attacking a weak element, the opponent will lose two hearts.</p>
         <p>When attacking a strong element, you will lose one heart, but switch places with the opponent.</p>
         <p>When attacking a matching element, you and the opponent both lose one heart.</p>
+        <p>Your score is the number of hearts you have remaining after the board is cleared!</p>
         <p>A new board is available every day!</p>
       </div>
     </div>

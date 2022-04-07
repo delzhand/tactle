@@ -4,52 +4,16 @@ const today = new Date().setHours(0, 0, 0, 0);
 const puzzleId = Math.ceil((today - start)/(dayms));
 let seedRand = new Math.seedrandom(puzzleId);
 
-let state = {};
-let persist = null;
+let gameState = {};
 
 function init() {
   setInterval(countdown, 1000);
-  persist = localStorage.getItem('tactle');
-  if (!persist) {
-    persist = {
-      lastPlayed: today,
-      todayHighScore: 0,
-      played: 0,
-      wins: 0,
-      incompletes: 0,
-      losses: 0,
-      streak: 0,
-      maxStreak: 0,
-      distribution: {
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0
-      }
-    };
-  }
-  else {
-    persist = JSON.parse(persist);
-  }
-  const daysSinceLastPlayed = today - persist.lastPlayed;
-  if (daysSinceLastPlayed >= 1 || persist.played === 0) {
-    persist.played++;
-    persist.incompletes++;
-  }
-
-  persist.lastPlayed = today;
-  localStorage.setItem('tactle', JSON.stringify(persist));
-
-  state = {
+  gameState = {
     tempX: false,
     tempY: false,
     seed: puzzleId,
-    score: 0,
+    maxScore: 0,
     round: 1,
-    pieces: [],
-    blocks: [],
   };
   ['light', 'dark'].forEach(color => {
     const sigilPool = getSigilPool(5);
@@ -61,43 +25,35 @@ function init() {
       piece.x = i;
       piece.y = 1;
       if (color == 'dark') {
-        piece.y = 6;
-      }
-      if (i == 3) {
-        piece.piece = 'king';
+        piece.y = 7;
       }
       switch(piece.piece) {
         case 'pawn':
-          piece.hp = 1;
+          piece.hp = 2;
           break;
         case 'rook':
         case 'bishop':
         case 'knight':
-          piece.hp = 2;
+          piece.hp = 3;
           break;
         case 'king':
         case 'queen':
-          piece.hp = 3;
+          piece.hp = 4;
           break;
       }
+      if (color === 'dark') {
+        gameState.maxScore += parseInt(piece.hp);
+      }
       drawPiece(piece);
-      state.pieces.push(piece);
     }
   });
   for (let i=0; i<2; i++) {
-    const blocked = {x: getRandomInt(5)+1, y: getRandomInt(2)+3};
-    state.blocks.push(blocked);
+    const blocked = {x: getRandomInt(5)+1, y: getRandomInt(3)+3};
     drawBlock(blocked);
   }
   $(`.tile`).click(function() {
     $e = $(this);
     touchTile($e);
-  });
-  $('.light').each(function() {
-    $e = $(this);
-    const tiles = getMoveable($e);
-    const r = getRandomInt(tiles.length);
-    $e.attr('data-x', tiles[r].x).attr('data-y', tiles[r].y);
   });
 }
 
@@ -107,7 +63,7 @@ function drawBlock(block) {
 
 function drawPiece(piece) {
   $('.grid').append(`
-  <div class="unit ${piece.color}" data-piece="${piece.piece}" data-x="${piece.x}" data-y="${piece.y}" data-sigil="${piece.sigil}" data-hp=${piece.hp} data-state="${piece.color === 'dark' ? 'ready' : ''}">
+  <div class="unit" data-color="${piece.color}" data-piece="${piece.piece}" data-x="${piece.x}" data-y="${piece.y}" data-sigil="${piece.sigil}" data-hp=${piece.hp} data-state="${piece.color === 'dark' ? 'ready' : 'ai'}">
     <span class="piece icon-"></span>
     <span class="piece dupe icon-"></span>
     <div class="info">
@@ -117,11 +73,11 @@ function drawPiece(piece) {
     </div>
   </div>
   `);
-  $p = $(`[data-x="${piece.x}"][data-y="${piece.y}"]`);
+  $p = getPieceAt(piece.x, piece.y);
   for (let i=0; i < piece.hp; i++) {
     $p.find('.hp').append('<span class="icon-heart"></span>');
   }
-  $(`[data-x="${piece.x}"][data-y="${piece.y}"]`).click(function() {
+  $p.click(function() {
     $e = $(this);
     touchPiece($e);
   });
@@ -146,14 +102,14 @@ function rewind() {
 }
 
 function touchPiece($e) {
+  const eData = getPieceData($e);
   const mode = getMode();
   const $activePiece = getActivePiece();
-  if (mode === 'neutral' && $e.hasClass('dark')) {
+  if (mode === 'neutral' && eData.color === 'dark') {
     $('.rewind').removeClass('hidden');
-    cstate = $e.attr('data-state');
-    if (!cstate || cstate === 'ready') {
-      tempX = $e.attr('data-x');
-      tempY = $e.attr('data-y');    
+    if (!eData.state || eData.state === 'ready') {
+      tempX = eData.x;
+      tempY = eData.y;
       $('.active').attr('data-x', $e.attr('data-x')).attr('data-y', $e.attr('data-y')).removeClass('hidden');
       $e.attr('data-state', 'moving');
       setMoveable($e);
@@ -171,34 +127,13 @@ function touchPiece($e) {
     if ($activePiece.is($e)) {
       // self select, no attack
       $activePiece.attr('data-state', 'waiting');
-      // $('[data-attack="true"]').attr('data-attack', "false");
-      // $e.attr('data-state', 'waiting');
-      // $('.active').addClass('hidden');
       endTurn();
     }
-    else if ($e.hasClass('light') && isAttackable($e)) {
+    else if (eData.color === 'light' && isAttackable($e)) {
       // attack foe
-      const result = doAttack($activePiece, $e);
-      if (result === -1) {
-        // loss
-        loseHeart($activePiece, 1);
-        const ax = $activePiece.attr('data-x');
-        const ay = $activePiece.attr('data-y');
-        $activePiece.attr('data-x', $e.attr('data-x'));
-        $activePiece.attr('data-y', $e.attr('data-y'));
-        $e.attr('data-x', ax);
-        $e.attr('data-y', ay);
-      }
-      else if (result === 1) {
-        // win
-        loseHeart($e, 2);
-      }
-      else {
-        // tie
-        loseHeart($e, 1);
-        loseHeart($activePiece, 1);
-      }
-      $('.score').html(`<span class="a-changeValue">${state.score}</span>`);
+      const result = compareElement($activePiece, $e);
+      doAttack($activePiece, $e, result);
+      $('.score').html(`<span class="a-changeValue">${gameState.score}</span>`);
       $activePiece.attr('data-state', 'waiting');
       endTurn();
     }
@@ -210,28 +145,64 @@ function endTurn() {
   $('[data-state="attacking"]').attr('data-state', 'waiting');
   $('.active').addClass('hidden');
   $('.rewind').addClass('hidden');
-  $remainingFoes = $('.unit.light');
+  $remainingFoes = $('[data-color="light"]');
+  $remainingAllies = $('[data-color="dark"]');
   if ($remainingFoes.length === 0) {
     $('[data-state="ready"]').attr('data-state', 'waiting');
-    console.log("Victory!");
-    persist.incompletes--;
-    persist.wins++;
-    persist.distribution[state.round]++;
-    window.localStorage.setItem('tactle', JSON.stringify(persist));
+    $('.score').html(`${getScore()}/${gameState.maxScore}`);
     showPanel('victory');
     return;
   }
-  $remainingPieces = $('[data-state="ready"]');
-  if ($remainingPieces.length === 0) {
-    if (state.round < 6) {
-      state.round++;
-      $('.round').html(`<span class="a-changeValue">${state.round}</span>`);
-      $('[data-state="waiting"]').attr('data-state', 'ready');
-    }
-    else {
+  if ($remainingAllies.length === 0) {
       console.log("Failed...");      
       showPanel('failed');
-    }
+  }
+  $remainingPieces = $('[data-state="ready"]');
+  if ($remainingPieces.length === 0) {
+    gameState.aiInterval = setInterval(function() {
+      executeAI();
+    // gameState.round++;
+    // $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
+    // $('[data-state="waiting"]').attr('data-state', 'ready');
+
+    }, 1000);
+    // // start ai turn
+    // console.log($remainingFoes);
+    // $remainingFoes.each(function(){
+    //   doAIAction($(this));      
+    //   await bananapeel(500);
+    // });
+    // $('[data-color="light"]').attr('data-state', 'ai');
+
+    // gameState.round++;
+    // $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
+    // $('[data-state="waiting"]').attr('data-state', 'ready');
+
+    // if (gameState.round < 6) {
+    //   gameState.round++;
+    //   $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
+    //   $('[data-state="waiting"]').attr('data-state', 'ready');
+    // }
+    // else {
+    //   console.log("Failed...");      
+    //   showPanel('failed');
+    // }
+  }
+}
+
+function executeAI() {
+  $remainingFoes = $('[data-state="ai"]');
+  if ($remainingFoes.length) {
+    $foe = $remainingFoes.first();
+    doAIAction($foe);
+    $foe.attr('data-state', 'aiwaiting');
+  }
+  else {
+    gameState.round++;
+    $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
+    $('[data-state="waiting"]').attr('data-state', 'ready');
+    $('[data-state="aiwaiting"]').attr('data-state', 'ai');
+    clearTimeout(gameState.aiInterval);
   }
 }
 
@@ -256,16 +227,14 @@ function hidePanel() {
 }
 
 function setMoveable($e) {
-  let tiles = getMoveable($e);
+  const eData = getPieceData($e);
+  let tiles = getMoveable(eData.x, eData.y, eData.piece);
   tiles.forEach(t => {
     $(`[data-row="${t.y}"] [data-col="${t.x}"]`).attr('data-move', "true");
   });
 }
 
-function getMoveable($e) {
-  const piece = $e.attr('data-piece');
-  const x = parseInt($e.attr('data-x'));
-  const y = parseInt($e.attr('data-y'));
+function getMoveable(x, y, piece) {
   const all = [];
   const valid = [{x,y}];
   switch (piece) {
@@ -301,7 +270,7 @@ function isMoveable(x, y) {
   const $t = $(`[data-row="${y}"] [data-col="${x}"]`);
   if ($t.length) {
     // is the tile empty
-    const $unitAt = $(`[data-x="${x}"][data-y="${y}"]`);
+    const $unitAt = getPieceAt(x, y);
     if (!$unitAt.length) {
       // is the tile blocked
       const blocked = $t.attr('data-block');
@@ -313,16 +282,14 @@ function isMoveable(x, y) {
 }
 
 function setAttackable($e) {
-  let tiles = getAttackable($e);
+  const eData = getPieceData($e);
+  let tiles = getAttackable(eData.color, eData.x, eData.y);
   tiles.forEach(t => {
     $(`[data-row="${t.y}"] [data-col="${t.x}"]`).attr('data-attack', "true");
   });
 }
 
-function getAttackable($e) {
-  const piece = $e.attr('data-piece');
-  const x = parseInt($e.attr('data-x'));
-  const y = parseInt($e.attr('data-y'));
+function getAttackable(attackerColor, x, y) {
   const all = [
     [x-1,y-1],[x,y-1],[x+1,y-1],
     [x-1,y],[x+1,y],
@@ -336,8 +303,8 @@ function getAttackable($e) {
     const $t = $(`[data-row="${ty}"] [data-col="${tx}"]`);
     if ($t.length) {
       // is the tile empty
-      const $unitAt = $(`[data-x="${tx}"][data-y="${ty}"]`);
-      if ($unitAt.length && $unitAt.hasClass('light')) {
+      const $unitAt = getPieceAt(tx, ty);
+      if ($unitAt.length && $unitAt.attr('data-color') !== attackerColor) {
         valid.push({x: tx, y: ty});
       }
     }
@@ -345,7 +312,30 @@ function getAttackable($e) {
   return valid;
 }
 
-function doAttack($attacker, $target) {
+function doAttack($attacker, $defender, result) {
+  if (result === -1) {
+    // loss
+    loseHeart($attacker, 1);
+    const aData = getPieceData($attacker);
+    const ax = aData.x;
+    const ay = aData.y;
+    $attacker.attr('data-x', $defender.attr('data-x'));
+    $attacker.attr('data-y', $defender.attr('data-y'));
+    $defender.attr('data-x', ax);
+    $defender.attr('data-y', ay);
+  }
+  else if (result === 1) {
+    // win
+    loseHeart($defender, 2);
+  }
+  else {
+    // tie
+    loseHeart($defender, 1);
+    loseHeart($attacker, 1);
+  }
+}
+
+function compareElement($attacker, $target) {
   attack = $attacker.attr('data-sigil');
   defend = $target.attr('data-sigil');
   if (attack === 'water' && defend === 'fire') return 1;
@@ -357,6 +347,50 @@ function doAttack($attacker, $target) {
   return 0;
 }
 
+function doAIAction($e) {
+  $e.attr('data-state', 'moving');
+  let option = false;
+  const options = getAIOptions($e);
+  options.forEach(o => {
+    if (!option || o.rating > option.rating) {
+      option = o;
+    }
+  });
+  moveTo(option.x, option.y);
+  if (option.target) {
+    const result = compareElement($e, option.target)
+    doAttack($e, option.target, result);
+  }
+}
+
+function getAIOptions($e) {
+  const eData = getPieceData($e);
+  // AI priority:
+  // Element Advantage * 10
+  // Weakest HP * 5
+  // Downward board position * 1
+  const options = [];
+  moveable = getMoveable(eData.x, eData.y, eData.piece);
+  moveable.forEach(m => {
+    let rating = 0;
+    rating += m.y; // y position
+    options.push({x: m.x, y: m.y, target: null, rating})
+    const attackable = getAttackable(eData.color, m.x, m.y);
+    attackable.forEach(a => {
+      const $pieceAt = getPieceAt(a.x, a.y);
+      if ($pieceAt.length && !$pieceAt.is($e)) {
+        const paData = getPieceData($pieceAt);
+        const elementComp = compareElement($e, $pieceAt);
+        rating += ((elementComp+1)/2) * 10; // normalized element
+        const hp = paData.hp;
+        rating += ((5-hp)/5) * 5;
+        options.push({x: m.x, y: m.y, target: $pieceAt, rating})
+      }
+    });
+  });
+  return options;
+}
+
 function loseHeart($e, n) {
   $e.addClass('a-shake');
   $e.find('.hp').empty();
@@ -366,28 +400,26 @@ function loseHeart($e, n) {
   }
 
   $nhp = $hp - n;
-
-  if ($e.hasClass('light')) {
-    state.score += n;
-  }
-  else {
-    state.score -= n;
-  }
-
   if ($nhp <= 0) {
     $nhp = 0;
-    $e.remove();
-    if ($e.hasClass('light')) {
-      if ($e.attr('data-piece') === 'king') {
-        $('.score-crown').html('<span class="icon-king a-changeValue"></span>');
-      }  
-    }
+    setTimeout(function() {
+      $e.remove();
+    }, 500);
     return;
   }
   $e.attr('data-hp', $nhp);
   for (let i=0; i < $nhp; i++) {
     $e.find('.hp').append('<span class="icon-heart"></span>');
   }
+}
+
+function getScore() {
+  let score = 0;
+  $('[data-color="dark"]').each(function() {
+    data = getPieceData($(this));
+    score += data.hp;
+  });
+  return score;
 }
 
 function addCardinals(tiles, x, y, d) {
@@ -493,7 +525,9 @@ function touchTile($e) {
     const y = parseInt($e.parent().attr('data-row'));
     if ($e.attr('data-move') == 'true') {
       moveTo(x, y);
-      const attackable = getAttackable($u);
+      const $activePiece = getActivePiece();
+      const apData = getPieceData($activePiece);
+      const attackable = getAttackable(apData.color, x, y);
       if (attackable.length > 0) {
         attackable.forEach(t => {
           $(`[data-row="${t.y}"] [data-col="${t.x}"]`).attr('data-attack', "true");
@@ -502,6 +536,14 @@ function touchTile($e) {
       $('[data-move="true"]').attr('data-move', "false");
     }
   }
+}
+
+function getTileCoords($e) {
+  return {x: $e.attr('data-col'), y: $e.parent().attr('data-row')};
+}
+
+function getPieceAt(x, y) {
+  return $(`.unit[data-x="${x}"][data-y="${y}"]`);
 }
 
 function moveTo(x, y) {
@@ -537,6 +579,21 @@ function isAttackable($e) {
 function getPiece() {
   const regPieces = ['pawn', 'rook', 'knight', 'bishop', 'queen'];
   return regPieces[getRandomInt(regPieces.length)];
+}
+
+function getPieceData($e) {
+  if (!$e) {
+    return null;
+  }
+  return {
+    x: parseInt($e.attr('data-x')), 
+    y: parseInt($e.attr('data-y')),
+    color: $e.attr('data-color'),
+    state: $e.attr('data-state'),
+    sigil: $e.attr('data-sigil'),
+    hp: parseInt($e.attr('data-hp')),
+    piece: $e.attr('data-piece')
+  };
 }
 
 function getSigilPool(count) {
