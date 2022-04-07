@@ -358,6 +358,15 @@ h1 {
   z-index: 3;
 }
 
+.unit .index {
+  position: absolute;
+  top: .3em;
+  left: .3em;
+  z-index: 3;
+  color: #FFF;
+  font-size: .8em;
+}
+
 .sigil {
   padding: .2em;
   font-size: .8em;

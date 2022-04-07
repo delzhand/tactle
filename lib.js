@@ -19,6 +19,7 @@ function init() {
     const sigilPool = getSigilPool(5);
     for (let i=1; i<=5; i++) {
       const piece = {};
+      piece.index = i;
       piece.piece = getPiece();
       piece.color = color;
       piece.sigil = sigilPool[i-1];
@@ -63,13 +64,14 @@ function drawBlock(block) {
 
 function drawPiece(piece) {
   $('.grid').append(`
-  <div class="unit" data-color="${piece.color}" data-piece="${piece.piece}" data-x="${piece.x}" data-y="${piece.y}" data-sigil="${piece.sigil}" data-hp=${piece.hp} data-state="${piece.color === 'dark' ? 'ready' : 'ai'}">
+  <div class="unit" data-index="${piece.index}" data-color="${piece.color}" data-piece="${piece.piece}" data-x="${piece.x}" data-y="${piece.y}" data-sigil="${piece.sigil}" data-hp=${piece.hp} data-state="${piece.color === 'dark' ? 'ready' : 'ai'}">
     <span class="piece icon-"></span>
     <span class="piece dupe icon-"></span>
     <div class="info">
       <div class="hp">
       </div>
       <span class="sigil icon-"></span>
+      <div class="index">${piece.index}</div>
     </div>
   </div>
   `);
@@ -313,25 +315,31 @@ function getAttackable(attackerColor, x, y) {
 }
 
 function doAttack($attacker, $defender, result) {
+  const aData = getPieceData($attacker);
+  const dData = getPieceData($defender);
+  console.log(`${aData.color}-${aData.index} attacks ${dData.color}-${dData.index}`);
   if (result === -1) {
+    console.log("weak match");
     // loss
     loseHeart($attacker, 1);
-    const aData = getPieceData($attacker);
-    const ax = aData.x;
-    const ay = aData.y;
-    $attacker.attr('data-x', $defender.attr('data-x'));
-    $attacker.attr('data-y', $defender.attr('data-y'));
-    $defender.attr('data-x', ax);
-    $defender.attr('data-y', ay);
+    loseHeart($defender, 1);
+    // const ax = aData.x;
+    // const ay = aData.y;
+    // $attacker.attr('data-x', $defender.attr('data-x'));
+    // $attacker.attr('data-y', $defender.attr('data-y'));
+    // $defender.attr('data-x', ax);
+    // $defender.attr('data-y', ay);
   }
   else if (result === 1) {
+    console.log("strong match");
     // win
     loseHeart($defender, 2);
   }
   else {
+    console.log("even match");
     // tie
     loseHeart($defender, 1);
-    loseHeart($attacker, 1);
+    // loseHeart($attacker, 1);
   }
 }
 
@@ -586,6 +594,7 @@ function getPieceData($e) {
     return null;
   }
   return {
+    index: $e.attr('data-index'),
     x: parseInt($e.attr('data-x')), 
     y: parseInt($e.attr('data-y')),
     color: $e.attr('data-color'),
