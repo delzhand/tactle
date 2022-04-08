@@ -36,7 +36,7 @@ function init() {
   };
   ['light', 'dark'].forEach(color => {
     const sigilPool = getSigilPool(5);
-    for (let i=1; i<=4; i++) {
+    for (let i=1; i<=5; i++) {
       const piece = {};
       piece.index = i;
       piece.piece = getPiece();
