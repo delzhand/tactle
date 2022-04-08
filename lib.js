@@ -1,3 +1,4 @@
+const version = "v1.6"
 const dayms = 1000 * 60 * 60 * 24;
 const start = new Date('2022/04/01').setHours(0, 0, 0, 0);
 const today = new Date().setHours(0, 0, 0, 0);
@@ -8,6 +9,7 @@ let gameState = {};
 let persist = null;
 
 function init() {
+  $('.version').html(version);
   $('.puzzle').html(puzzleId);
   persist = localStorage.getItem('tactle');
   if (persist) {
@@ -228,6 +230,7 @@ function showPanel(result) {
   }
   if (result === 'victory') {
     $('.panel .victory').removeClass('hidden');
+    $('.streak').html(persist.streak);
     $('.score').html(`${getScore()}/${gameState.maxScore}`);
     $('.todaybest').html(persist.todayHigh);
     countUp($('.percent'), Math.round(getScore()/gameState.maxScore*100));
