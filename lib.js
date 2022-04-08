@@ -13,7 +13,6 @@ function init() {
   if (persist) {
     persist = JSON.parse(persist);
   }
-  console.log(persist);
   if (!persist) {
     showPanel('how');
     persist = {
@@ -23,7 +22,9 @@ function init() {
     };
     localStorage.setItem('tactle', JSON.stringify(persist));
   }
-
+  if (puzzleId != persist.lastPuzzle && persist.todayHigh > 0) {
+    persist.todayHigh = 0;
+  }
   console.log(persist);
 
   setInterval(countdown, 1000);
