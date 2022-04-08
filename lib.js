@@ -5,8 +5,27 @@ const puzzleId = Math.ceil((today - start)/(dayms));
 let seedRand = new Math.seedrandom(puzzleId);
 
 let gameState = {};
+let persist = null;
 
 function init() {
+  $('.puzzle').html(puzzleId);
+  persist = localStorage.getItem('tactle');
+  if (persist) {
+    persist = JSON.parse(persist);
+  }
+  console.log(persist);
+  if (!persist) {
+    showPanel('how');
+    persist = {
+      streak: 1,
+      todayHigh: 0,
+      lastPuzzle: null
+    };
+    localStorage.setItem('tactle', JSON.stringify(persist));
+  }
+
+  console.log(persist);
+
   setInterval(countdown, 1000);
   gameState = {
     tempX: false,
@@ -17,7 +36,7 @@ function init() {
   };
   ['light', 'dark'].forEach(color => {
     const sigilPool = getSigilPool(5);
-    for (let i=1; i<=5; i++) {
+    for (let i=1; i<=4; i++) {
       const piece = {};
       piece.index = i;
       piece.piece = getPiece();
@@ -129,7 +148,7 @@ function touchPiece($e) {
     if ($activePiece.is($e)) {
       // self select, no attack
       $activePiece.attr('data-state', 'waiting');
-      endTurn();
+      endTurn(true);
     }
     else if (eData.color === 'light' && isAttackable($e)) {
       // attack foe
@@ -137,58 +156,49 @@ function touchPiece($e) {
       doAttack($activePiece, $e, result);
       $('.score').html(`<span class="a-changeValue">${gameState.score}</span>`);
       $activePiece.attr('data-state', 'waiting');
-      endTurn();
+      endTurn(true);
     }
   }
 }
 
-function endTurn() {
+function endTurn(doAI) {
   $('[data-attack="true"]').attr('data-attack', "false");
   $('[data-state="attacking"]').attr('data-state', 'waiting');
   $('.active').addClass('hidden');
   $('.rewind').addClass('hidden');
-  $remainingFoes = $('[data-color="light"]');
-  $remainingAllies = $('[data-color="dark"]');
+  $remainingFoes = $('[data-color="light"][data-hp!="0"]');
+  $remainingAllies = $('[data-color="dark"][data-hp!="0"]');
   if ($remainingFoes.length === 0) {
+    const score = getScore();
+    const percent = Math.round(score/gameState.maxScore*100);
     $('[data-state="ready"]').attr('data-state', 'waiting');
-    $('.score').html(`${getScore()}/${gameState.maxScore}`);
+    if (persist.lastPuzzle === puzzleId - 1) {
+      persist.streak++;
+      persist.lastPuzzle = puzzleId;
+    }
+    else {
+      persist.streak = 1;
+    }
+    if (!persist.todayHigh || percent > persist.todayHigh) {
+      persist.todayHigh = percent;
+    }
+    localStorage.setItem('tactle', JSON.stringify(persist));
     showPanel('victory');
     return;
   }
   if ($remainingAllies.length === 0) {
       console.log("Failed...");      
       showPanel('failed');
+      return;
   }
-  $remainingPieces = $('[data-state="ready"]');
-  if ($remainingPieces.length === 0) {
-    gameState.aiInterval = setInterval(function() {
-      executeAI();
-    // gameState.round++;
-    // $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
-    // $('[data-state="waiting"]').attr('data-state', 'ready');
 
-    }, 1000);
-    // // start ai turn
-    // console.log($remainingFoes);
-    // $remainingFoes.each(function(){
-    //   doAIAction($(this));      
-    //   await bananapeel(500);
-    // });
-    // $('[data-color="light"]').attr('data-state', 'ai');
-
-    // gameState.round++;
-    // $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
-    // $('[data-state="waiting"]').attr('data-state', 'ready');
-
-    // if (gameState.round < 6) {
-    //   gameState.round++;
-    //   $('.round').html(`<span class="a-changeValue">${gameState.round}</span>`);
-    //   $('[data-state="waiting"]').attr('data-state', 'ready');
-    // }
-    // else {
-    //   console.log("Failed...");      
-    //   showPanel('failed');
-    // }
+  if (doAI) {
+    $remainingPieces = $('[data-state="ready"]');
+    if ($remainingPieces.length === 0) {
+      gameState.aiInterval = setInterval(function() {
+        executeAI();
+      }, 1000);
+    }
   }
 }
 
@@ -198,6 +208,7 @@ function executeAI() {
     $foe = $remainingFoes.first();
     doAIAction($foe);
     $foe.attr('data-state', 'aiwaiting');
+    endTurn(false);
   }
   else {
     gameState.round++;
@@ -216,8 +227,12 @@ function showPanel(result) {
   }
   if (result === 'victory') {
     $('.panel .victory').removeClass('hidden');
+    $('.score').html(`${getScore()}/${gameState.maxScore}`);
+    $('.todaybest').html(persist.todayHigh);
+    countUp($('.percent'), Math.round(getScore()/gameState.maxScore*100));
   }
   if (result === 'failed') {
+    $('.todaybest').html(persist.todayHigh);
     $('.panel .failed').removeClass('hidden');
   }
 }
@@ -391,7 +406,7 @@ function getAIOptions($e) {
         const elementComp = compareElement($e, $pieceAt);
         rating += ((elementComp+1)/2) * 10; // normalized element
         const hp = paData.hp;
-        rating += ((5-hp)/5) * 5;
+        rating += ((4-hp)/4) * 5;
         options.push({x: m.x, y: m.y, target: $pieceAt, rating})
       }
     });
@@ -408,6 +423,7 @@ function loseHeart($e, n) {
   }
 
   $nhp = $hp - n;
+  $e.attr('data-hp', $nhp);
   if ($nhp <= 0) {
     $nhp = 0;
     setTimeout(function() {
@@ -415,7 +431,6 @@ function loseHeart($e, n) {
     }, 500);
     return;
   }
-  $e.attr('data-hp', $nhp);
   for (let i=0; i < $nhp; i++) {
     $e.find('.hp').append('<span class="icon-heart"></span>');
   }
@@ -551,7 +566,7 @@ function getTileCoords($e) {
 }
 
 function getPieceAt(x, y) {
-  return $(`.unit[data-x="${x}"][data-y="${y}"]`);
+  return $(`.unit[data-x="${x}"][data-y="${y}"][data-hp!="0"]`);
 }
 
 function moveTo(x, y) {
@@ -647,4 +662,25 @@ function shuffle(array) {
       array[randomIndex], array[currentIndex]];
   }
   return array;
+}
+
+const animationDuration = 2000;
+const frameDuration = 1000/60;
+const totalFrames = Math.round(animationDuration/frameDuration);
+function easeOutQuad(t) {
+  return t * (2 - t);
+}
+function countUp($el, countTo) {
+  let frame = 0;
+  const counter = setInterval( () => {
+    frame++;
+    const progress = easeOutQuad(frame/totalFrames);
+		const currentCount = Math.round(countTo*progress);
+    if (parseInt($el.html(), 10 ) !== currentCount) {
+			$el.html(currentCount);
+		}
+    if (frame === totalFrames) {
+      clearInterval(counter);
+    }
+  }, frameDuration);
 }

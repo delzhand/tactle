@@ -159,10 +159,6 @@ body {
   font-family: 'Josefin Sans', sans-serif;
   background: black;
   color: #FFF;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
   padding: 0;
   margin: 0;
 }
@@ -185,15 +181,6 @@ body {
 .menu > * {
   -ms-flex-preferred-size: 0;
       flex-basis: 0;
-  min-width: 100px;
-}
-
-.menu > *:nth-child(2) {
-  text-align: center;
-}
-
-.menu > *:nth-child(3) {
-  text-align: right;
 }
 
 h1 {
@@ -203,6 +190,10 @@ h1 {
 }
 
 .grid {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
   margin-left: auto;
   margin-right: auto;
   max-width: 362px;
@@ -552,6 +543,7 @@ h1 {
 
 .panel .close {
   text-align: right;
+  cursor: pointer;
 }
 
 .panel h2 {
@@ -562,6 +554,11 @@ h1 {
   text-align: left;
 }
 
+.panel .percentscore {
+  font-size: 3em;
+}
+
+.about,
 .version {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
@@ -571,7 +568,26 @@ h1 {
   left: 0;
   width: 100%;
   text-align: right;
-  color: #333;
+  color: #555;
   font-size: .8em;
+}
+
+.about {
+  z-index: 2;
+  text-align: left;
+}
+
+.about a {
+  color: #FFF;
+}
+
+.button {
+  background-color: teal;
+  color: #FFF;
+  text-transform: uppercase;
+  border-radius: 2px;
+  padding: 6px;
+  font-size: 1.2em;
+  border-bottom: 2px solid #004e4e;
 }
 /*# sourceMappingURL=style.css.map */

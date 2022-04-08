@@ -16,9 +16,8 @@
 </head>
 <body>
   <div class="menu">
-    <div onClick="showPanel('how')">How to Play</div>
-    <h1>Tactle</h1>
-    <div onClick="showPanel('stats')"><s>Stats</s></div>
+    <h1>Tactle/<span class="puzzle"></span></h1>
+    <div onClick="showPanel('how')"><span class="icon-info"></span></div>
   </div>
   <div class="grid">
     <div class="row" data-row="1">
@@ -108,12 +107,15 @@
       <div class="close" onClick="hidePanel()">X</div>
       <div class="display victory hidden">
         <h2>Victory!</h2>
-        <p>Score: <b class="score">0</b></p>
+        <p>Hearts Remaining: <b class="score">0</b></p>
+        <p class="percentscore">Score: <span class="percent"></span>%</p>
+        <p>Best today: <span class="todaybest"></span>%</p>
         <p>Next Board in <span class="countdown"></span></p>
       </div>
       <div class="display failed hidden">
         <h2>Failed...</h2>
-        <p>Score: <b class="score">0</b></p>
+        <p class="percentscore">Score: 0%</p>
+        <p>Best today: <span class="todaybest"></span></p>
       </div>
       <div class="display how hidden">
         <h2>How to Play</h2>
@@ -121,6 +123,7 @@
         <p>You play as dark pieces. Each piece moves once per round.</p>
         <p>Each piece can move in a specific pattern, but not through other pieces of over gaps (except Knights).</p>
         <p>After moving (or remaining in place), a piece can attack any adjacent opponent.</p>
+        <p>There is no randomness to enemy AI.</p>
         <p>
           <span class="sigil icon-fire"></span> beats <span class="sigil icon-grass"></span>, 
           <span class="sigil icon-grass"></span> beats <span class="sigil icon-water"></span>, 
@@ -135,7 +138,8 @@
     </div>
   </div>
 
-  <div class="version">v1.2</div>
+  <div class="about"><a href="https://twitter.com/delzhand">questions?</a></div>
+  <div class="version">v1.3</div>
 
   <script>
     init();
