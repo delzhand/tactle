@@ -1,8 +1,9 @@
-const version = "v1.6"
+const version = "v1.7"
 const dayms = 1000 * 60 * 60 * 24;
 const start = new Date('2022/04/01').setHours(0, 0, 0, 0);
 const today = new Date().setHours(0, 0, 0, 0);
-const puzzleId = Math.ceil((today - start)/(dayms));
+let puzzleId = Math.ceil((today - start)/(dayms));
+// puzzleId = 3;
 let seedRand = new Math.seedrandom(puzzleId);
 
 let gameState = {};
@@ -45,11 +46,6 @@ function init() {
       piece.piece = getPiece();
       piece.color = color;
       piece.sigil = sigilPool[i-1];
-      piece.x = i;
-      piece.y = 1;
-      if (color == 'dark') {
-        piece.y = 7;
-      }
       switch(piece.piece) {
         case 'pawn':
           piece.hp = 2;
@@ -64,7 +60,11 @@ function init() {
           piece.hp = 4;
           break;
       }
-      if (color === 'dark') {
+      piece.x = i;
+      piece.y = 1;
+      if (color == 'dark') {
+        // piece.hp += 5; // cheat mode
+        piece.y = 7;
         gameState.maxScore += parseInt(piece.hp);
       }
       drawPiece(piece);
@@ -181,6 +181,7 @@ function endTurn(doAI) {
     }
     else {
       persist.streak = 1;
+      persist.lastPuzzle = puzzleId;
     }
     if (!persist.todayHigh || percent > persist.todayHigh) {
       persist.todayHigh = percent;
@@ -378,11 +379,13 @@ function doAIAction($e) {
   $e.attr('data-state', 'moving');
   let option = false;
   const options = getAIOptions($e);
+  console.log(options);
   options.forEach(o => {
     if (!option || o.rating > option.rating) {
       option = o;
     }
   });
+  console.log(option);
   moveTo(option.x, option.y);
   if (option.target) {
     const result = compareElement($e, option.target)
@@ -410,7 +413,7 @@ function getAIOptions($e) {
         const elementComp = compareElement($e, $pieceAt);
         rating += ((elementComp+1)/2) * 10; // normalized element
         const hp = paData.hp;
-        rating += ((4-hp)/4) * 5;
+        rating += ((5-hp)/5) * 5;
         options.push({x: m.x, y: m.y, target: $pieceAt, rating})
       }
     });
