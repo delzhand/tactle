@@ -1,9 +1,9 @@
-const version = "v1.7"
+const version = "v1.8"
+const cheatMode = false;
 const dayms = 1000 * 60 * 60 * 24;
 const start = new Date('2022/04/01').setHours(0, 0, 0, 0);
 const today = new Date().setHours(0, 0, 0, 0);
 let puzzleId = Math.ceil((today - start)/(dayms));
-// puzzleId = 3;
 let seedRand = new Math.seedrandom(puzzleId);
 
 let gameState = {};
@@ -63,9 +63,16 @@ function init() {
       piece.x = i;
       piece.y = 1;
       if (color == 'dark') {
-        // piece.hp += 5; // cheat mode
+        if (cheatMode) {
+          piece.hp += 5;
+        }
         piece.y = 7;
         gameState.maxScore += parseInt(piece.hp);
+      }
+      else {
+        if (cheatMode) {
+          piece.hp = 1;
+        }
       }
       drawPiece(piece);
     }
