@@ -1,4 +1,4 @@
-const version = "v1.8"
+const version = "v1.9"
 const cheatMode = false;
 const dayms = 1000 * 60 * 60 * 24;
 const start = new Date('2022/04/01').setHours(0, 0, 0, 0);
@@ -28,7 +28,6 @@ function init() {
   if (puzzleId != persist.lastPuzzle && persist.todayHigh > 0) {
     persist.todayHigh = 0;
   }
-  console.log(persist);
 
   setInterval(countdown, 1000);
   gameState = {
@@ -614,7 +613,7 @@ function isAttackable($e) {
 }
 
 function getPiece() {
-  const regPieces = ['pawn', 'rook', 'knight', 'bishop', 'queen'];
+  const regPieces = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king'];
   return regPieces[getRandomInt(regPieces.length)];
 }
 
@@ -697,4 +696,53 @@ function countUp($el, countTo) {
       clearInterval(counter);
     }
   }, frameDuration);
+}
+
+function share() {
+  if (navigator.share) {
+    let text = `<a href="https://delzhand.github.io/tactle/">Tactle/${puzzleId}</a>
+Score: ${getScore()}
+`;
+
+    $remainingAllies = $('[data-color="dark"][data-hp!="0"]').each(function() {
+      data = getPieceData($(this));
+      text += `${data.index}`;
+      switch(data.piece) {
+        case 'pawn':
+          text += `♟: `
+          break;
+        case 'rook':
+          text += `♜: `;
+          break;
+        case 'bishop':
+          text += `♝: `;
+          break;
+        case 'knight':
+          text += `♞: `;
+          break;
+        case 'queen':
+          text += `♛: `;
+          break;
+        case 'king':
+          text += '♚: ';
+          break;
+      }
+      for(let i = 0; i++; i<data.hp) {
+        text += `❤️`;
+      }
+      text += `
+`;
+    });
+
+    navigator.share({
+      title: `Tactle/${puzzleId}`,
+      url: `https://delzhand.github.io/tactle/`,
+      text: `<a href="https://delzhand.github.io/tactle/">Tactle/${puzzleId}</a>      `
+    }).then(() => {
+
+    }).catch(console.error)
+  }
+  else {
+    console.log("Sharing not enabled");
+  }
 }

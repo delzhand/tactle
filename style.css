@@ -582,12 +582,18 @@ h1 {
 }
 
 .button {
+  display: block;
+  cursor: pointer;
   background-color: teal;
   color: #FFF;
   text-transform: uppercase;
   border-radius: 2px;
-  padding: 6px;
+  padding: 7px 6px 5px;
   font-size: 1.2em;
   border-bottom: 2px solid #004e4e;
+}
+
+.button:hover {
+  background-color: #00c9c9;
 }
 /*# sourceMappingURL=style.css.map */
